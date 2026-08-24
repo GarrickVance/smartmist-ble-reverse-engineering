@@ -37,7 +37,6 @@ is completed.
 | `DEPLOYMENT.md` | Setup, validation, and troubleshooting runbook |
 | `REVERSE_ENGINEERING.md` | Method, recovered app symbols, and verification boundary |
 | `LIVE_VERIFICATION.md` | Conservative physical-device test sequence |
-| `HANDOFF.md` | Internal continuation record; intentionally not part of the public repository |
 
 ## Protocol at a glance
 
@@ -106,6 +105,46 @@ placeholder representing five digits; its screenshot shows the same pattern.
 Accordingly, `FG31887` is an ordinary instance of the documented Bluetooth naming
 scheme. It is the tested advertisement name, not the model designation.
 
+## Product names and likely related models
+
+This controller appears under multiple product, reseller, and application names.
+The following terms are included to help owners find this research:
+
+- **Smart Mist / SmartMist USA:** `SM-100`, `SM-150`, `SM-200`, and `SM-300`
+  app-controlled high-pressure misting pumps and systems.
+- **Bluetooth identity:** names matching `FG#####` (the manuals render this as
+  `FGXXXXX`).
+- **Application/generic names:** `Misting System`, `Misting Machine`, `Fog
+  Machine`, app-controlled misting pump, fogging pump, fog-cooling system, and
+  high-pressure misting system.
+- **JOSTechnik:** `Nebelanlage FG-100/150` / `Fog Cooling FG-100/150`. Its
+  published instructions independently describe selecting an `FGXXXXX` device
+  through the misting/fog-machine app and reproduce the same connection rules.
+- **HEATSail:** `BEEM with Misting` and the misting system supplied with `LEAF`.
+  Their manuals show the same distinctive `POWER`, `MODE SELECT`, `NONSTOP
+  SPRAYING`, `APP MODE`, `OIL LAMP RESET`, `CHANGE OIL`, and `WATER LACK`
+  controls. This establishes a close hardware/UI resemblance, not protocol proof.
+
+Sources: the [Smart Mist product family](https://www.smartmistusa.com/collections/app-controlled-pumps-and-others),
+the [Smart Mist SM-100/150/200/300 manual](https://manuals.plus/m/8bd1263eb672d69f191b78cb11feeab3d851e6ef32419b4124f14ff644e80f95),
+the [JOSTechnik FG-100/150 instructions](https://jost-technik.de/Nebelanlage_FG-100-150-_-51.html),
+and the [HEATSail product site](https://www.heatsail.com/).
+
+### Expected compatibility, not yet confirmed
+
+The shared Smart Mist manual presents SM-100, SM-150, SM-200, and SM-300 as one
+product family and gives them a common touch-panel and app-operation procedure.
+That is meaningful evidence that multiple models use the same controller-board
+or firmware family, so this BLE protocol is **likely** to apply to other models
+that advertise as `FG#####` and use the same panel/app. It is not proof that every
+model, production revision, or white-label unit has identical firmware.
+
+Only the FG31887 unit associated with the SM-150-class system has been physically
+verified. For any candidate device, begin with service discovery and the safe
+power query `EE0001.`. Require FFE0/FFE1 and a recognized response before trying
+the full-state query. Do not send setter commands merely because the enclosure,
+panel, model number, or app looks identical.
+
 ## Architecture rationale
 
 The bridge is intentionally query-driven and stateless. BLE connections are
@@ -114,27 +153,22 @@ controller on connect and after writes prevents Home Assistant from presenting a
 remembered state as truth. Periodic reconciliation covers physical controls and
 scheduler changes until unsolicited-notification behavior is established.
 
-## Repository layout for publication
+## Repository contents
 
 ```text
-smartmist-ble/
+smartmist-ble-reverse-engineering/
 ├── README.md
-├── LICENSE
-├── SECURITY.md
-├── CONTRIBUTING.md
-├── docs/
-│   ├── SMARTMIST_PROTOCOL.md
-│   ├── REVERSE_ENGINEERING.md
-│   ├── DEPLOYMENT.md
-│   └── LIVE_VERIFICATION.md
-├── examples/
-│   └── smartmist_esphome.yaml
-└── tools/
-    └── smartmist_probe.py
+├── SMARTMIST_PROTOCOL.md
+├── REVERSE_ENGINEERING.md
+├── LIVE_VERIFICATION.md
+├── DEPLOYMENT.md
+├── smartmist_probe.py
+└── smartmist_esphome.yaml
 ```
 
-The current handoff keeps everything together under `outputs/` for portability.
-Move files only when preparing the public repository, and update relative links.
+The documentation remains flat in the initial release so the protocol evidence
+and reproduction tool are immediately visible. The ESPHome YAML is retained as
+an experimental future-integration example.
 
 ## Scope and support
 
