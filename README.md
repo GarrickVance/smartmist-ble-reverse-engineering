@@ -105,6 +105,34 @@ placeholder representing five digits; its screenshot shows the same pattern.
 Accordingly, `FG31887` is an ordinary instance of the documented Bluetooth naming
 scheme. It is the tested advertisement name, not the model designation.
 
+### Likely original manufacturer
+
+The strongest available evidence points to **Taizhou Fog Machine Co., Ltd.**
+(also branded **FG Machine**) in Zhejiang, China, as the likely original equipment
+manufacturer or platform supplier. The company was formerly known as **Linhai
+Dex Machinery Co., Ltd.**
+
+The evidence chain is:
+
+1. The analyzed OEM app has bundle identifier `com.spw.MistingApp` and version
+   `1.20.07`.
+2. Archived store metadata for that exact bundle/version lists Linhai Dex
+   Machinery as publisher and says the app was developed by Taizhou Fog Machine
+   to control the FG-100, FG-150, FG-200, and FG-300.
+3. [Taizhou Fog Machine's official product catalog](https://www.tzfog.com/)
+   lists those same four FG models as its commercial 70-bar misting-system family,
+   including an FG-150 rated at 1.5 L/min and 70 bar/1000 PSI.
+4. The company's [official history](https://www.tzfog.com/about-us) identifies
+   Linhai Dex Machinery as its former name.
+5. Older FG-family manuals explicitly thank customers for purchasing a fog
+   machine from Taizhou Fog Machine and show the same model family and app flow.
+
+This attribution is substantially stronger than enclosure resemblance alone,
+but it remains an evidence-based identification rather than documented proof of
+the supply-chain relationship for this particular Smart Mist-branded FG31887.
+Smart Mist USA should therefore be described as the tested retail brand/vendor,
+and Taizhou Fog Machine as the **likely OEM**.
+
 ## Product names and likely related models
 
 This controller appears under multiple product, reseller, and application names.
