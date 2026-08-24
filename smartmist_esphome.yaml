@@ -1,0 +1,93 @@
+substitutions:
+  device_name: smartmist-bridge
+  smartmist_mac: "XX:XX:XX:XX:XX:XX"
+  smartmist_service: "0000FFE0-0000-1000-8000-00805F9B34FB"
+  smartmist_characteristic: "0000FFE1-0000-1000-8000-00805F9B34FB"
+
+esphome:
+  name: ${device_name}
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+logger:
+api:
+ota:
+  - platform: esphome
+
+# Add your normal wifi:/captive_portal: configuration here.
+
+esp32_ble_tracker:
+  scan_parameters:
+    continuous: true
+
+ble_client:
+  - mac_address: ${smartmist_mac}
+    id: smartmist_ble
+    auto_connect: true
+    on_connect:
+      then:
+        # Allow the notification text sensor below to register before writing.
+        - delay: 2s
+        - script.execute: smartmist_query_power
+
+text_sensor:
+  - platform: ble_client
+    id: smartmist_notifications
+    internal: true
+    ble_client_id: smartmist_ble
+    service_uuid: ${smartmist_service}
+    characteristic_uuid: ${smartmist_characteristic}
+    notify: true
+    update_interval: never
+    on_notify:
+      then:
+        - lambda: |-
+            ESP_LOGI("smartmist", "RX: %s", x.c_str());
+            if (x == "EE10010.") {
+              id(smartmist_power).publish_state(true);
+            } else if (x == "EE10011.") {
+              id(smartmist_power).publish_state(false);
+            } else if (x != "EE110.") {
+              ESP_LOGW("smartmist", "Unparsed response: %s", x.c_str());
+            }
+
+script:
+  - id: smartmist_query_power
+    mode: restart
+    then:
+      - ble_client.ble_write:
+          id: smartmist_ble
+          service_uuid: ${smartmist_service}
+          characteristic_uuid: ${smartmist_characteristic}
+          value: [0x45, 0x45, 0x30, 0x30, 0x30, 0x31, 0x2E] # EE0001.
+
+switch:
+  - platform: template
+    id: smartmist_power
+    name: "SmartMist Power"
+    optimistic: false
+    restore_mode: DISABLED
+    turn_on_action:
+      - ble_client.ble_write:
+          id: smartmist_ble
+          service_uuid: ${smartmist_service}
+          characteristic_uuid: ${smartmist_characteristic}
+          value: [0x45, 0x45, 0x30, 0x31, 0x30, 0x30, 0x2E] # EE0100.
+      - delay: 500ms
+      - script.execute: smartmist_query_power
+    turn_off_action:
+      - ble_client.ble_write:
+          id: smartmist_ble
+          service_uuid: ${smartmist_service}
+          characteristic_uuid: ${smartmist_characteristic}
+          value: [0x45, 0x45, 0x30, 0x31, 0x30, 0x31, 0x2E] # EE0101.
+      - delay: 500ms
+      - script.execute: smartmist_query_power
+
+interval:
+  - interval: 30s
+    then:
+      - script.execute: smartmist_query_power
