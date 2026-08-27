@@ -83,6 +83,8 @@ on the follow-up query, and the physical unit's spray state was visually
 confirmed to match at each step. Steps 4–6 (physical-control reconciliation,
 power-cycle/reconnect, and Home Assistant restart with the integration already
 configured) have not yet been separately exercised.
+Long-run polling, proxy-availability churn, and proxy connection-slot contention
+also remain untested.
 
 ## Expected entity semantics
 

@@ -23,8 +23,8 @@ endorsement by the device manufacturer or app publisher is implied.
 
 ## Project status
 
-The reverse-engineering phase is complete for the documented command family on
-the tested FG31887. Transport behavior, power/query traffic, full-state parsing,
+The core protocol mapping is complete for the tested FG31887 and documented
+command family. Transport behavior, power/query traffic, full-state parsing,
 and no-op setter encodings were physically verified. Compatibility with other
 units remains unverified.
 
@@ -263,9 +263,10 @@ deployment-validated path.
 
 ## Scope and support
 
-The implementation is complete for basic power observation/control on the tested
-protocol, and the native Home Assistant integration has completed one live
-on/off/query round trip through an ESPHome Bluetooth Proxy on the tested FG31887.
+Basic power observation/control is implemented for the tested protocol. The
+native Home Assistant integration has completed one live on/off/full-state-query
+validation through an ESPHome Bluetooth Proxy on the tested FG31887. Long-run
+reliability and the remaining acceptance scenarios are not yet validated.
 Schedule editing and broader device-family support are documented but not
 exposed as Home Assistant entities. See the protocol document for known
 unknowns and evidence strength.

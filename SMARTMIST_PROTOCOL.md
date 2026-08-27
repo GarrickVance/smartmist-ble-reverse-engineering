@@ -1,7 +1,7 @@
 # SmartMist SM-150 BLE protocol (tested advertisement: FG31887)
 
 > **Status:** Authoritative protocol reference for this project. Last consolidated
-> 2026-08-24. Distinguish **device-verified**, **binary-derived**, and **inferred**
+> 2026-08-27. Distinguish **device-verified**, **binary-derived**, and **inferred**
 > statements as marked below.
 
 Static analysis source: `/Applications/Misting System.app/Wrapper/MistingApp.app/MistingApp`
@@ -64,6 +64,7 @@ EE 1 C R PAYLOAD .
 | Power on | `EE0100.` | `EE110.` |
 | Power off | `EE0101.` | `EE110.` |
 | Query power | `EE0001.` | `EE10010.` on; `EE10011.` off |
+| Query full state | `EE000.` | Comma-separated `EE100…` records ending `,.` |
 
 ## Confirmed setter commands and acknowledgements
 
@@ -191,6 +192,7 @@ time slots 01–03 disabled, and frequency slot 00 enabled with work 10 / pause 
 | FFE0/FFE1 UUIDs, notify-before-write, write-without-response | Live FG31887 BLE session | Confirmed |
 | Power/query bytes and responses | Live FG31887 session | Confirmed |
 | Full-state response and subrecord decoding | OEM parser plus live FG31887 response | Confirmed for captured state |
+| Native HA power on/off/full-state path through ESPHome Bluetooth Proxy | One supervised end-to-end FG31887 deployment test | Confirmed once; long-run reliability untested |
 | Commands 2–7 and record shapes | OEM binary plus no-op writes and unchanged state | Confirmed encoding/acceptance |
 | Clock suffix and first-query behavior | OEM binary control flow | Binary-derived; not live-tested |
 | UI bounds, defaults, model fields | OEM binary/model behavior | Binary-derived |
@@ -203,12 +205,17 @@ time slots 01–03 disabled, and frequency slot 00 enabled with work 10 / pause 
   compatibility among every device using that pattern.
 - No claim is made that every SmartMist, SM-150, HMSoft, or visually identical
   white-label device uses this protocol or the same polarity.
-- Power ON was not required for the final no-op verification run; the recorded
-  safe state remained OFF. Operational ON/OFF testing should be supervised.
+- The original conservative no-op verification kept the unit OFF. A later,
+  separate supervised native Home Assistant test exercised power ON and OFF
+  once through an ESPHome Bluetooth Proxy and confirmed each resulting state by
+  full-state query and physical observation.
 - Setter failure codes other than the observed `1` are unknown.
 - Maximum slot counts, accepted numeric ranges at firmware level, clock weekday
   convention, unsolicited-notification behavior, authentication, and behavior
   under malformed or rapid commands remain unverified.
+- Physical-control reconciliation, Home Assistant restart behavior,
+  reconnect/proxy-availability churn, proxy contention, and long-run integration
+  reliability remain unverified.
 - Fragmentation across notifications is possible. The Python probe accumulates
   fragments; the compact ESPHome example compares each callback string and may
   need a small receive buffer if a particular ESPHome/firmware combination
@@ -230,4 +237,4 @@ time slots 01–03 disabled, and frequency slot 00 enabled with work 10 / pause 
 UUIDs, transport behavior, power, single/full queries, all command IDs, and all setter record shapes were confirmed directly. Setters 2 through 7 were exercised as no-op writes using existing values, followed by a byte-identical full-state query. The mister remained physically and logically OFF throughout verification.
 
 “Confirmed” is scoped to the tested FG31887. See `LIVE_VERIFICATION.md` for the
-safe test sequence and `HANDOFF.md` for the continuation boundary.
+safe test sequence and the separate native Home Assistant validation result.

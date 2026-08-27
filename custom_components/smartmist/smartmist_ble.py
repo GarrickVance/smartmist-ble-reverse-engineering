@@ -115,7 +115,7 @@ class SmartMistDevice:
 
         def _notified(_handle: int, data: bytearray) -> None:
             response.extend(data)
-            if b"." in data:
+            if response.find(b".") != -1:
                 complete.set()
 
         client: BleakClientWithServiceCache = await establish_connection(
@@ -142,10 +142,16 @@ class SmartMistDevice:
         finally:
             await client.disconnect()
 
+        terminator = response.find(b".")
+        if terminator == -1:
+            raise SmartMistError(
+                f"Unterminated response to {command!r}: {bytes(response)!r}"
+            )
+        complete_response = bytes(response[: terminator + 1])
         try:
-            return bytes(response).decode("ascii")
+            return complete_response.decode("ascii")
         except UnicodeDecodeError as err:
-            raise SmartMistError(f"Non-ASCII response: {bytes(response)!r}") from err
+            raise SmartMistError(f"Non-ASCII response: {complete_response!r}") from err
 
     async def query_state(self) -> dict:
         """Query full device state (power, runtime, mode, schedule)."""

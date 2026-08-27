@@ -58,8 +58,8 @@ Relevant BLE selectors/strings retained in the binary include:
 - `Try to open notifyn`
 
 These names are useful anchors for reproducing the analysis. Stable virtual
-addresses are intentionally not asserted here: no address map was retained in
-the handoff, and offsets can differ by binary build or loader. Use the recorded
+addresses are intentionally not asserted here: no stable address map was
+retained, and offsets can differ by binary build or loader. Use the recorded
 hash to establish whether an address from a future disassembly refers to the same
 binary.
 

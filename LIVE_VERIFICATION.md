@@ -14,7 +14,7 @@ Prerequisites:
 1. Scan and identify the SmartMist peripheral.
 2. Connect and subscribe to FFE1 notifications.
 3. Send `EE0001.` and require the known OFF response `EE10011.`.
-4. Disconnect, reconnect, subscribe again, then send the inferred all-state query `EE000.`.
+4. Disconnect, reconnect, subscribe again, then send the confirmed full-state query `EE000.`.
 5. Preserve every notification fragment as both raw hexadecimal bytes and ASCII.
 6. Send `EE0001.` again and confirm the mister remains OFF.
 
@@ -64,6 +64,8 @@ integration and an ESPHome Bluetooth Proxy, rather than a direct Bleak connectio
   BLE adapter local to the Home Assistant host), confirming the proxy-routing
   path itself, not just the protocol.
 
-Not yet exercised for the native integration: reconnect/proxy-availability churn
-over time, behavior when the proxy's connection slots are contended by other BLE
-devices, and a Home Assistant restart with the config entry already present.
+Not yet exercised for the native integration: reconciliation after a safe
+physical-control change; restart/reconnect and proxy-availability churn; behavior
+when the proxy's connection slots are contended by other BLE devices; Home
+Assistant restart with the config entry already present; and long-run polling
+reliability.
