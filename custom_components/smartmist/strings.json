@@ -1,0 +1,18 @@
+{
+  "config": {
+    "step": {
+      "confirm": {
+        "description": "Set up SmartMist device {name}?"
+      },
+      "user": {
+        "data": {
+          "address": "Device"
+        },
+        "description": "Choose a discovered SmartMist device, or enter its BLE MAC address manually."
+      }
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  }
+}

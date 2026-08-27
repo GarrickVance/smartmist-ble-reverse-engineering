@@ -47,3 +47,23 @@ Do not begin until a complete baseline and restoration encoding exist. Test one 
 
 Preserve future evidence as timestamped raw hex, ASCII, command intent, physical
 observation, decoded result, and pre/post full-state snapshots.
+
+## Native Home Assistant integration: completed result
+
+This is a separate verification from the probe-based sequence above: it exercises
+`custom_components/smartmist` end-to-end through Home Assistant's `bluetooth`
+integration and an ESPHome Bluetooth Proxy, rather than a direct Bleak connection.
+
+- Full-state query (`EE000.`) succeeded on the coordinator's first scheduled poll
+  after config entry setup, decoding `power_on`, `runtime`, and `mode` correctly.
+- `switch.turn_on` wrote `EE0100.`; the coordinator's follow-up full-state query
+  reported `power_on: true`. The physical unit was visually confirmed spraying.
+- `switch.turn_off` wrote `EE0101.`; the coordinator's follow-up full-state query
+  reported `power_on: false`. The physical unit was visually confirmed stopped.
+- Both writes and both follow-up queries completed through the proxy (not a
+  BLE adapter local to the Home Assistant host), confirming the proxy-routing
+  path itself, not just the protocol.
+
+Not yet exercised for the native integration: reconnect/proxy-availability churn
+over time, behavior when the proxy's connection slots are contended by other BLE
+devices, and a Home Assistant restart with the config entry already present.

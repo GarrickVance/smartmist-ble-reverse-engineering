@@ -3,9 +3,12 @@
 An independently reverse-engineered BLE protocol for a SmartMist SM-150-class
 misting controller advertising as `FG31887`. The primary output is a documented,
 physically validated ASCII command protocol plus a conservative Bleak probe for
-reproducing queries. An ESPHome/Home Assistant example is included only as an
-experimental future-integration starting point; it is not the focus of this
-initial publication and has not yet completed deployment validation.
+reproducing queries. A native Home Assistant integration (`custom_components/smartmist`)
+implements the validated power/query commands and has completed a live deployment
+test: connect through an ESPHome Bluetooth Proxy, subscribe, write, and confirm
+resulting state by query, in both directions. An ESPHome/Home Assistant `ble_client`
+example is also included as a secondary, experimental starting point for anyone who
+would rather not run a custom component.
 
 This is an independent interoperability project. No affiliation with or
 endorsement by the device manufacturer or app publisher is implied.
@@ -23,9 +26,16 @@ endorsement by the device manufacturer or app publisher is implied.
 The reverse-engineering phase is complete for the documented command family on
 the tested FG31887. Transport behavior, power/query traffic, full-state parsing,
 and no-op setter encodings were physically verified. Compatibility with other
-units remains unverified. ESPHome and Home Assistant work is intentionally
-secondary and should be treated as experimental until target deployment testing
-is completed.
+units remains unverified.
+
+The native Home Assistant integration has completed one live deployment test on
+the tested FG31887: power on, power off, and full-state query, each round-tripped
+through an ESPHome Bluetooth Proxy rather than a directly attached adapter. Long-run
+reliability (extended polling, proxy reconnect churn, multiple BLE devices sharing
+one proxy) has not been exercised. Timer/frequency/weekday **write** support is not
+implemented; those fields are decoded read-only. The `ble_client`-based ESPHome
+example remains secondary and experimental, and has not itself completed the
+acceptance test in `DEPLOYMENT.md`.
 
 ## What is included
 
@@ -33,7 +43,8 @@ is completed.
 |---|---|
 | `SMARTMIST_PROTOCOL.md` | Authoritative wire-protocol specification and evidence labels |
 | `smartmist_probe.py` | Bleak scanner/query tool; mutations require an explicit flag |
-| `smartmist_esphome.yaml` | Example ESP32 BLE client and Home Assistant power switch |
+| `custom_components/smartmist/` | Native Home Assistant integration (recommended) |
+| `smartmist_esphome.yaml` | Secondary/experimental ESP32 BLE client example |
 | `DEPLOYMENT.md` | Setup, validation, and troubleshooting runbook |
 | `REVERSE_ENGINEERING.md` | Method, recovered app symbols, and verification boundary |
 | `LIVE_VERIFICATION.md` | Conservative physical-device test sequence |
@@ -76,10 +87,49 @@ other BLE clients first.
 Non-query commands are deliberately blocked unless `--allow-mutation` is added.
 Do not add that flag until you have read the safety procedure.
 
-## ESPHome and Home Assistant behavior
+## Native Home Assistant integration (recommended)
 
-Copy `smartmist_esphome.yaml`, set the device BLE address and normal Wi-Fi/API
-configuration, then compile and flash it for the actual ESP32 board. The example:
+`custom_components/smartmist` is a standard Home Assistant custom integration.
+It does not require dedicating an ESP32 to this one device: it uses Home
+Assistant's core `bluetooth` integration, which transparently routes the BLE
+connection through any adapter or registered ESPHome Bluetooth Proxy that has
+the controller in range. One proxy can be shared across this and other,
+unrelated BLE devices.
+
+Install:
+
+1. Copy `custom_components/smartmist/` into your Home Assistant `config/custom_components/` directory.
+2. Restart Home Assistant Core (custom integrations are only imported at startup).
+3. The controller is discovered automatically by local-name prefix (`FG3*`) or
+   by its `0000ffe0-0000-1000-8000-00805f9b34fb` service UUID; accept the
+   discovery card under Settings → Devices & Services, or add it manually from
+   there if discovery doesn't fire.
+
+Behavior:
+
+- Connects, subscribes to `FFE1`, and sends the full-state query `EE000.` on a
+  fixed poll interval (60 s) — connect-per-poll, not a held-open connection, so
+  a shared proxy's limited connection slots stay available for other devices.
+- Exposes `switch.<device>_power`: strictly non-optimistic, exactly as
+  `smartmist_esphome.yaml` intends — the entity state is only ever set from a
+  parsed query response, never assumed from the write.
+- Exposes `sensor.<device>_runtime` and `sensor.<device>_mode` (both read-only,
+  diagnostic); `weekdays`, `time_customizable`, and `frequency_customizable` are
+  surfaced as attributes on the mode sensor. Time-slot and frequency-slot
+  records are decoded internally but not yet exposed as entities.
+- Does not implement any setter beyond power on/off. Schedule/timer editing is
+  intentionally out of scope until those command payloads are reverse-engineered
+  and validated the same way power/query were.
+
+See `DEPLOYMENT.md` for the acceptance test this integration was run against.
+
+## ESPHome and Home Assistant behavior (secondary, experimental)
+
+This path dedicates a single ESP32 to this one device rather than sharing a
+Bluetooth Proxy; prefer the native integration above unless there's a specific
+reason to run a standalone bridge. Copy `smartmist_esphome.yaml`, set the device
+BLE address and normal Wi-Fi/API configuration, then compile and flash it for
+the actual ESP32 board. The example:
 
 - auto-connects to the controller;
 - allows notification registration before its first query;
@@ -191,16 +241,31 @@ smartmist-ble-reverse-engineering/
 ├── LIVE_VERIFICATION.md
 ├── DEPLOYMENT.md
 ├── smartmist_probe.py
-└── smartmist_esphome.yaml
+├── smartmist_esphome.yaml
+└── custom_components/
+    └── smartmist/
+        ├── manifest.json
+        ├── __init__.py
+        ├── const.py
+        ├── smartmist_ble.py
+        ├── coordinator.py
+        ├── config_flow.py
+        ├── switch.py
+        ├── sensor.py
+        ├── strings.json
+        └── translations/en.json
 ```
 
 The documentation remains flat in the initial release so the protocol evidence
 and reproduction tool are immediately visible. The ESPHome YAML is retained as
-an experimental future-integration example.
+a secondary, experimental example; `custom_components/smartmist/` is the
+deployment-validated path.
 
 ## Scope and support
 
 The implementation is complete for basic power observation/control on the tested
-protocol. Schedule editing and broader device-family support are documented but
-not exposed as Home Assistant entities. See the protocol document for known
+protocol, and the native Home Assistant integration has completed one live
+on/off/query round trip through an ESPHome Bluetooth Proxy on the tested FG31887.
+Schedule editing and broader device-family support are documented but not
+exposed as Home Assistant entities. See the protocol document for known
 unknowns and evidence strength.
